@@ -1,12 +1,22 @@
-[![Build Status](https://circleci.com/gh/EncoreTechnologies/puppetdb-openapi.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/EncoreTechnologies/puppetdb-openapi) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+# PuppetDB OpenAPI Specification
 
-# Overview
 
-Provides an Swagger/[OpenAPI](https://swagger.io/specification) specification for the
-[PuppetDB API](https://puppet.com/docs/puppetdb/latest/api/index.html).
+## Working on specification
+### Install
 
-## Versions
+1. Install [Node JS](https://nodejs.org/)
+2. Clone repo and run `npm install` in the repo root
 
-| PuppetDB | OpenAPI | File                                                                              |
-|:---------|:--------|:----------------------------------------------------------------------------------|
-| 6.3      | 3.0.0   | [/specs/puppetdb_6.3_openapi_3.0.0.yaml](./specs/puppetdb_6.3_openapi_3.0.0.yaml) |
+### Usage
+
+#### `npm start`
+Starts the development server.
+
+#### `npm run build`
+Bundles the spec and prepares web_deploy folder with static assets.
+
+#### `npm test`
+Validates the spec.
+
+#### `npm run gh-pages`
+Deploys docs to GitHub Pages. You don't need to run it manually if you have Travis CI configured.
