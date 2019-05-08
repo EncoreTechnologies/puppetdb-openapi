@@ -96,6 +96,14 @@ components:
         This value should be an integer. Note that the order in which results are returned by PuppetDB is not
         guaranteed to be consistent unless you specify a value for order_by, so this parameter should generally be
         used in conjunction with order_by.
+    producers_name:
+       name: producer
+       in: path
+       required: true
+       schema:
+         type: string
+       description: >
+         certname of the producer
     query:
       name: query
       in: query
@@ -132,15 +140,84 @@ components:
          the resource type, with the first leter always capitalized
         
   responses:
+    catalog_response:
+      description: >
+        The result will be a single map of the catalog structure described above, or a JSON error message if the catalog is not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/hash'
+    catalogs_response:
+      description: >
+        Successful responses will be in application/json.
+        The result will be a JSON array with one entry per certname. Each entry is of the form:
+        {
+          "certname" : <node certname>,
+          "version" : <catalog version>,
+          "environment" : <catalog environment>,
+          "hash" : <sha1 sum of catalog resources>,
+          "transaction_uuid" : <string to identify puppet run>,
+          "code_id" : <string to identify puppet code>,
+          "producer_timestamp": <time of transmission by master>,
+          "producer": <master certname>
+          "resources" : <expanded resources>,
+          "edges" : <expanded edges>
+        }
+        The <expanded resources> object is of the following form:
+        {
+          "href": <url>,
+          "data": [ {
+            "certname": <string>,
+            "resource": <string>,
+            "type": <string>,
+            "title": <sttring>,
+            "exported": <boolean>,
+            "tags": [<tags>, ...],
+            "file": <string>,
+            "line": <number>,
+            "parameters": <any>
+          } ... ]
+        }
+        In parameters map, any rich data values will appear as readable strings.
+        The <expanded edges> object is of the follow form:        
+        {
+          "href": <url>,
+          "data": [ {
+            "relationship": <string>,
+            "source_title": <string>,
+            "source_type": <string>,
+            "target_title": <string>,
+            "target_type": <string>
+          } ... ]
+        }
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/array_of_hashes'
     events_response:
       description: >
         An array of zero or more event objects
       content:
         application/json:
           schema:
-            type: array
-            items:
-              type: object
+            $ref: '#/components/schemas/array_of_hashes'
+    environment_response:
+      description: >
+        The response is a JSON hash of the form:
+          {"name": <string>}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/hash'
+    environments_response:
+      description: >
+        The response is a JSON array of hashes, where each hash has the form:
+          {"name": <string>}
+        The array is unsorted.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/array_of_hashes'
     facts_response:
       description: >
         Successful responses will be in application/json. Errors will be returned as non-JSON strings.
@@ -156,27 +233,98 @@ components:
       content:
         application/json:
           schema:
-            type: array
-            items:
-              type: object
+            $ref: '#/components/schemas/array_of_hashes'
+    factset_response:
+      description: >
+        The result will be a single map of the factset structure described above, or a JSON error message if the factset is not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/hash'
+    factsets_response:
+      description: >
+        Successful responses will be in application/json. Errors will be returned as a non-JSON string.        
+        The result will be a JSON array with one entry per certname. Each entry will be in the form:  
+        {
+          "certname": <node name>,
+          "environment": <node environment>,
+          "timestamp": <time of last fact submission>,
+          "producer_timestamp": <time of command submission from master>,
+          "producer": <master certname>
+          "facts": <expanded facts>,
+          "hash": <sha1 sum of "facts" value>
+        }
+        The <expanded facts> object is an expansion of the following form:     
+        {
+          "href": <url>,
+          "data": [ {
+            "name": <string>,
+            "value": <any>
+          } ... ]
+        }
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/array_of_hashes'
+    node_response:
+      description: >
+        The response is a single hash in the same form used for the plain nodes endpoint
+        shown above.
+        If a node of that certname doesn’t exist, the response will instead be a hash
+        of the form:
+          {"error": "No information is known about <NODE>"}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/hash'
+    nodes_response:  
+      description: >
+        The response is a JSON array of hashes.
+        The array is unsorted.
+        If no nodes match the query, an empty JSON array will be returned.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/array_of_hashes'
+    producer_response:
+      description: >
+        The response is a JSON hash of the form:
+          {"name": <string>}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/hash'
+    producers_response:
+      description: >
+        The response is a JSON array of hashes, where each hash has the form:
+          {"name": <string>}
+        The array is unsorted.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/array_of_hashes'
     reports_response:
       description: >
         The response is a JSON array of report summaries for all event reports that matched the input parameters. The array is unsorted.
       content:
         application/json:
           schema:
-            type: array
-            items:
-              type: object   
+            $ref: '#/components/schemas/array_of_hashes'
     resources_response:
       description: >
         An array of zero or more resource objects
       content:
         application/json:
           schema:
-            type: array
-            items:
-              type: object      
+            $ref: '#/components/schemas/array_of_hashes'
+
+  schemas:
+    array_of_hashes:
+      type: array
+      items:
+        type: object
+    hash:
+      type: object
 
 paths:
   /pdb/query/v4:
@@ -220,9 +368,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
+                $ref: '#/components/schemas/array_of_hashes'
   /pdb/query/v4/nodes:
     get:
       description: >
@@ -238,16 +384,7 @@ paths:
         - $ref: '#/components/parameters/query'
       responses:
         default:
-          description: >
-            The response is a JSON array of hashes.
-            The array is unsorted.
-            If no nodes match the query, an empty JSON array will be returned.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
+          $ref: '#/components/responses/nodes_response'
   /pdb/query/v4/nodes/{node}:
     get:
       description: >
@@ -270,16 +407,7 @@ paths:
         - $ref: '#/components/parameters/node_certname'
       responses:
         default:
-          description: >
-            The response is a single hash in the same form used for the plain nodes endpoint
-            shown above.
-            If a node of that certname doesn’t exist, the response will instead be a hash
-            of the form:
-              {"error": "No information is known about <NODE>"}
-          content:
-            application/json:
-              schema:
-                type: object
+          $ref: '#/components/responses/node_response'
   /pdb/query/v4/nodes/{node}/facts:
     get:
       description: >
@@ -417,6 +545,8 @@ paths:
   /pdb/query/v4/environments:
     get:
       description: >
+        Environments are semi-isolated groups of nodes managed by Puppet. Nodes are assigned to environments by their own configuration, or by the Puppet master’s external node classifier.
+        When PuppetDB collects info about a node, it keeps track of the environment the node is assigned to. PuppetDB also keeps a list of environments it has seen. You can query this list by making an HTTP request to the /environments endpoint.
         This will return all environments known to PuppetDB.
       operationId: environment_list
       externalDocs:
@@ -429,16 +559,7 @@ paths:
         - $ref: '#/components/parameters/query'
       responses:
         default:
-          description: >
-            The response is a JSON array of hashes.
-            The array is unsorted.
-            If no nodes match the query, an empty JSON array will be returned.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
+          $ref: '#/components/responses/environments_response'
   /pdb/query/v4/environments/{environment}:
     get:
       description: >
@@ -455,13 +576,7 @@ paths:
         - $ref: '#/components/parameters/environments_name'
       responses:
         default:
-          description: >
-            The response is a JSON hash of the form:
-              {"name": <string>}
-          content:
-            application/json:
-              schema:
-                type: object
+          $ref: '#/components/responses/environment_response'
   /pdb/query/v4/environments/{environment}/events:
     get:
       description: >
@@ -530,3 +645,89 @@ paths:
       responses:
         default:
           $ref: '#/components/responses/resources_response'
+  /pdb/query/v4/producers:
+    get:
+      description: >
+        Producers are the Puppet masters that send reports, catalogs, and factsets to PuppetDB.
+        When PuppetDB stores a report, catalog, or factset, it keeps track of the producer of the report/catalog/factset. PuppetDB also keeps a list of producers it has seen. You can query this list by making an HTTP request to the /producers endpoint.
+        This will return all producers known to PuppetDB.
+      operationId: producer_list
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producers
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+      responses:
+        default:
+          $ref: '#/components/responses/producers_response'
+  /pdb/query/v4/producers/{producer}:
+    get:
+      description: >
+        This will return the name of the producer if it currently exists in PuppetDB.
+      operationId: producer
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producersproducer
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/producers_name'
+      responses:
+        default:
+          $ref: '#/components/responses/producer_response'
+  /pdb/query/v4/producers/{producer}/catalogs:
+    get:
+      description: >
+        These routes are identical to issuing a request to /pdb/query/v4/[catalogs|factsets|reports], with a query parameter of ["=","producer","<PRODUCER>"]. All query parameters and route suffixes from the original routes are supported. The result format is also the same. Additional query parameters are ANDed with the producer clause. See /pdb/query/v4/catalogs, /pdb/query/v4/factsets, or /pdb/query/v4/reports for more information.
+      operationId: producer_catalogs
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producersproducercatalogsfactsetsreports
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/producers_name'
+      responses:
+        default:
+          $ref: '#/components/responses/catalogs_response'
+  /pdb/query/v4/producers/{producer}/factsets:
+    get:
+      description: >
+        These routes are identical to issuing a request to /pdb/query/v4/[catalogs|factsets|reports], with a query parameter of ["=","producer","<PRODUCER>"]. All query parameters and route suffixes from the original routes are supported. The result format is also the same. Additional query parameters are ANDed with the producer clause. See /pdb/query/v4/catalogs, /pdb/query/v4/factsets, or /pdb/query/v4/reports for more information.
+      operationId: producer_factsets
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producersproducercatalogsfactsetsreports
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/producers_name'
+      responses:
+        default:
+          $ref: '#/components/responses/factsets_response'
+  /pdb/query/v4/producers/{producer}/reports:
+    get:
+      description: >
+        These routes are identical to issuing a request to /pdb/query/v4/[catalogs|factsets|reports], with a query parameter of ["=","producer","<PRODUCER>"]. All query parameters and route suffixes from the original routes are supported. The result format is also the same. Additional query parameters are ANDed with the producer clause. See /pdb/query/v4/catalogs, /pdb/query/v4/factsets, or /pdb/query/v4/reports for more information.
+      operationId: producer_reports
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producersproducercatalogsfactsetsreports
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/producers_name'
+      responses:
+        default:
+          $ref: '#/components/responses/reports_response'

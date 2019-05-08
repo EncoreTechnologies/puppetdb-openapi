@@ -7,8 +7,6 @@ Provides an Swagger/[OpenAPI](https://swagger.io/specification) specification fo
 
 ## Versions
 
-| PuppetDB Version | OpenAPI Version  | File |
-|:--|:--|:--|
-| 6.3 | 3.0.0 | [puppetdb_6.3_openapi_3.0.0.yaml](./puppetdb_6.3_openapi_3.0.0.yaml) |
-|   |   |   |
-
+| PuppetDB | OpenAPI | File                                                                              |
+|:---------|:--------|:----------------------------------------------------------------------------------|
+| 6.3      | 3.0.0   | [/specs/puppetdb_6.3_openapi_3.0.0.yaml](./specs/puppetdb_6.3_openapi_3.0.0.yaml) |
