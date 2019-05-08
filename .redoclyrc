@@ -3,5 +3,6 @@ apiTitle: PuppetDB
 splitSpec: false
 codeSamples: false
 swaggerUI: true
-travis: false
+travis: true
+repo: EncoreTechnologies/puppetdb-openapi
 oasVersion: 3.0.0
