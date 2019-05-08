@@ -17,6 +17,7 @@ PYMODULE_DIR := $(ROOT_DIR)
 PYMODULE_TESTS_DIR ?= $(PYMODULE_DIR)/tests
 PYMODULE_NAME = $(shell python $(PYMODULE_DIR)/setup.py --name )
 YAML_FILES := $(shell git ls-files '*.yaml' '*.yml')
+SPEC_YAML_FILES := $(shell git ls-files 'specs/*.yaml' 'specs/*.yml')
 JSON_FILES := $(shell git ls-files '*.json')
 PY_FILES   := $(shell git ls-files '*.py')
 # Virtual Environment
@@ -89,7 +90,7 @@ requirements: virtualenv
 	@echo "==================== validate ===================="
 	@echo
 	. $(VIRTUALENV_DIR)/bin/activate; \
-	for YAML in $(YAML_FILES); do \
+	for YAML in $(SPEC_YAML_FILES); do \
 		echo "Validating $$YAML"; \
 		openapi-spec-validator $$YAML || exit 1; \
 	done
