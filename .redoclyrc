@@ -1,0 +1,8 @@
+specFileName: specs/puppetdb_6.3_openapi_3.0.0.yaml
+apiTitle: PuppetDB
+splitSpec: false
+codeSamples: false
+swaggerUI: true
+travis: true
+repo: EncoreTechnologies/puppetdb-openapi
+oasVersion: 3.0.0

@@ -1,0 +1,733 @@
+openapi: 3.0.0
+
+info:
+  version: latest.0
+  title: PuppetDB API
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+    
+    
+components:
+  parameters:
+    environments_name:
+       name: environment
+       in: path
+       required: true
+       schema:
+         type: string
+       description: >
+         name of the environment
+    facts_name:
+       name: name
+       in: path
+       required: true
+       schema:
+         type: string
+       description: >
+         name of the fact
+    facts_query:
+      name: query
+      in: query
+      required: false
+      schema:
+        type: string
+      description: >
+        A JSON array of query predicates, in prefix notation (["<OPERATOR>", "<FIELD>", "<VALUE>"]). See the sections below for the supported operators and fields. For general info about queries, see our guide to query structure.
+        This route is an extension of the facts endpoint. It uses the same parameters, operators, fields, and response format.
+        If you provide a query parameter, it will specify additional criteria, which will be used to return a subset of the information normally returned by this route.
+    node_certname:
+      name: node
+      in: path
+      required: true
+      schema:
+        type: string
+      description: >
+          certname of the node
+    paging_order_by:
+      in: query
+      name: order_by
+      required: false
+      schema:
+        type: string
+      description: >
+        This parameter can be used to ask PuppetDB to return results sorted by one or more fields, in ascending or
+        descending order. The value must be a JSON array of maps. Each map represents a field to sort by, and the
+        order in which the maps are specified in the array determines the sort order.
+        Each map must contain the key field, whose value must be the name of a field that can be returned by the
+        specified query.
+        Each map may also optionally contain the key order, whose value may either be "asc" or "desc", depending on
+        whether you wish the field to be sorted in ascending or descending order. The default value for this key, if
+        not specified, is "asc".
+        Note that the legal values for field vary depending on which endpoint you are querying. For lists of legal
+        fields, please refer to the documentation for the specific query endpoints.
+    paging_limit:
+      in: query
+      name: limit
+      required: false
+      schema:
+        type: integer
+      description: >
+        This parameter can be used to restrict the result set to a maximum number of results.
+    paging_include_total:
+      in: query
+      name: include_total
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: >
+        This parameter lets you request a count of how many records would have been returned, had the query not been
+        limited using the limit parameter. This is useful if you want your application to show how far the user has
+        navigated (“page 3 of 15”).
+        The value should be a Boolean, and defaults to false. If true, the HTTP response will contain a header 
+        X-Records, whose value is an integer indicating the total number of results available.
+        Note Setting this flag to true will introduce a minor performance hit on the query.
+    paging_offset:
+      in: query
+      name: offset
+      required: false
+      schema:
+        type: integer
+      description: >
+        This parameter can be used to tell PuppetDB to return results beginning at the specified offset. For
+        example, if you’d like to page through query results with a page size of 10, your first query would specify
+        limit=10 and offset=0, your second query would specify limit=10 and offset=10, and so on.
+        This value should be an integer. Note that the order in which results are returned by PuppetDB is not
+        guaranteed to be consistent unless you specify a value for order_by, so this parameter should generally be
+        used in conjunction with order_by.
+    producers_name:
+       name: producer
+       in: path
+       required: true
+       schema:
+         type: string
+       description: >
+         certname of the producer
+    query:
+      name: query
+      in: query
+      required: false
+      schema:
+        type: string
+      description: >
+        A JSON array of query predicates, in prefix notation (["<OPERATOR>", "<FIELD>", "<VALUE>"]). See the sections below for the supported operators and fields. For general info about queries, see our guide to query structure.
+    resources_query:
+      name: query
+      in: query
+      required: false
+      schema:
+        type: string
+      description: >
+        A JSON array of query predicates, in prefix notation (["<OPERATOR>", "<FIELD>", "<VALUE>"]). See the sections below for the supported operators and fields. For general info about queries, see our guide to query structure.
+        This route is an extension of the resources endpoint. It uses the same parameters, operators, fields, and response format.
+        If you provide a query parameter, it will specify additional criteria, which will be used to return a subset of the information normally returned by this route.
+    resources_title:
+       name: title
+       in: path
+       required: true
+       schema:
+         type: string
+       description: >
+         the resource title
+    resources_type:
+       name: type
+       in: path
+       required: true
+       schema:
+         type: string
+       description: >
+         the resource type, with the first leter always capitalized
+        
+  responses:
+    catalog_response:
+      description: >
+        The result will be a single map of the catalog structure described above, or a JSON error message if the catalog is not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/hash'
+    catalogs_response:
+      description: >
+        Successful responses will be in application/json.
+        The result will be a JSON array with one entry per certname. Each entry is of the form:
+        {
+          "certname" : <node certname>,
+          "version" : <catalog version>,
+          "environment" : <catalog environment>,
+          "hash" : <sha1 sum of catalog resources>,
+          "transaction_uuid" : <string to identify puppet run>,
+          "code_id" : <string to identify puppet code>,
+          "producer_timestamp": <time of transmission by master>,
+          "producer": <master certname>
+          "resources" : <expanded resources>,
+          "edges" : <expanded edges>
+        }
+        The <expanded resources> object is of the following form:
+        {
+          "href": <url>,
+          "data": [ {
+            "certname": <string>,
+            "resource": <string>,
+            "type": <string>,
+            "title": <sttring>,
+            "exported": <boolean>,
+            "tags": [<tags>, ...],
+            "file": <string>,
+            "line": <number>,
+            "parameters": <any>
+          } ... ]
+        }
+        In parameters map, any rich data values will appear as readable strings.
+        The <expanded edges> object is of the follow form:        
+        {
+          "href": <url>,
+          "data": [ {
+            "relationship": <string>,
+            "source_title": <string>,
+            "source_type": <string>,
+            "target_title": <string>,
+            "target_type": <string>
+          } ... ]
+        }
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/array_of_hashes'
+    events_response:
+      description: >
+        An array of zero or more event objects
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/array_of_hashes'
+    environment_response:
+      description: >
+        The response is a JSON hash of the form:
+          {"name": <string>}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/hash'
+    environments_response:
+      description: >
+        The response is a JSON array of hashes, where each hash has the form:
+          {"name": <string>}
+        The array is unsorted.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/array_of_hashes'
+    facts_response:
+      description: >
+        Successful responses will be in application/json. Errors will be returned as non-JSON strings.
+        The result will be a JSON array, with one entry per fact. Each entry is of the form:
+            {
+            "certname": <node name>,
+            "name": <fact name>,
+            "value": <fact value>,
+            "environment": <facts environment>
+            }
+            The array is unsorted. Fact values can be strings, floats, integers, Booleans, arrays, or maps. Map and array values can be any of the same types.
+            If no facts match the query, an empty JSON array will be returned. Querying against value will return matches only at the top level. Hashes and arrays cannot be matched.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/array_of_hashes'
+    factset_response:
+      description: >
+        The result will be a single map of the factset structure described above, or a JSON error message if the factset is not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/hash'
+    factsets_response:
+      description: >
+        Successful responses will be in application/json. Errors will be returned as a non-JSON string.        
+        The result will be a JSON array with one entry per certname. Each entry will be in the form:  
+        {
+          "certname": <node name>,
+          "environment": <node environment>,
+          "timestamp": <time of last fact submission>,
+          "producer_timestamp": <time of command submission from master>,
+          "producer": <master certname>
+          "facts": <expanded facts>,
+          "hash": <sha1 sum of "facts" value>
+        }
+        The <expanded facts> object is an expansion of the following form:     
+        {
+          "href": <url>,
+          "data": [ {
+            "name": <string>,
+            "value": <any>
+          } ... ]
+        }
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/array_of_hashes'
+    node_response:
+      description: >
+        The response is a single hash in the same form used for the plain nodes endpoint
+        shown above.
+        If a node of that certname doesn’t exist, the response will instead be a hash
+        of the form:
+          {"error": "No information is known about <NODE>"}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/hash'
+    nodes_response:  
+      description: >
+        The response is a JSON array of hashes.
+        The array is unsorted.
+        If no nodes match the query, an empty JSON array will be returned.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/array_of_hashes'
+    producer_response:
+      description: >
+        The response is a JSON hash of the form:
+          {"name": <string>}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/hash'
+    producers_response:
+      description: >
+        The response is a JSON array of hashes, where each hash has the form:
+          {"name": <string>}
+        The array is unsorted.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/array_of_hashes'
+    reports_response:
+      description: >
+        The response is a JSON array of report summaries for all event reports that matched the input parameters. The array is unsorted.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/array_of_hashes'
+    resources_response:
+      description: >
+        An array of zero or more resource objects
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/array_of_hashes'
+
+  schemas:
+    array_of_hashes:
+      type: array
+      items:
+        type: object
+    hash:
+      type: object
+
+paths:
+  /pdb/query/v4:
+    get:
+      description: >
+        This will return any known entity based on the required query field. Unlike other
+        endpoints, the entity must be supplied using a query with the from operator or a
+        PQL query string.
+        Like all other PDB query endpoints, query results from the root query endpoint will
+        be restricted to active nodes by default. To target only inactive nodes, you can
+        specify node_state = 'inactive'; for all both active and inactive,
+        use node_state = 'any'.
+      operationId: query
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/latest/api/query/v4/index.html
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          description: >
+            Either a PQL query string, or an AST JSON array containing the query in prefix notation (["from", "<ENTITY>", ["<OPERATOR>", "<FIELD>", "<VALUE>"]]). Unlike other endpoints, a query with a from is required to choose the entity for which to query. For general info about queries, see our guide to query structure.
+        - name: ast_only
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: >
+            When true, the query response will be the supplied query in AST, either exactly as supplied or translated from PQL. False by default.
+      responses:
+        default:
+          description: >
+            The response will be in application/json, and will contain a list of JSON object
+            results based on the entity provided in the top-level from query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/array_of_hashes'
+  /pdb/query/v4/nodes:
+    get:
+      description: >
+        This will return all nodes matching the given query. Deactivated and expired nodes aren’t included in the response.
+      operationId: node_list
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/latest/api/query/v4/nodes.html#pdbqueryv4nodes
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+      responses:
+        default:
+          $ref: '#/components/responses/nodes_response'
+  /pdb/query/v4/nodes/{node}:
+    get:
+      description: >
+        This will return status information for the given node, active or not. It behaves
+        exactly like a call to /pdb/query/v4/nodes with a query string of
+        ["=", "certname", "<NODE>"].
+        This route is an extension of the plain nodes endpoint. It uses the same parameters,
+        operators, and fields.
+        If you provide a query parameter, it will specify additional criteria, which will be
+        used to return a subset of the information normally returned by this route.
+      operationId: node
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/latest/api/query/v4/nodes.html#pdbqueryv4nodesnode
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/node_certname'
+      responses:
+        default:
+          $ref: '#/components/responses/node_response'
+  /pdb/query/v4/nodes/{node}/facts:
+    get:
+      description: >
+        This will return the facts for the given node. Facts from deactivated and expired nodes aren’t included in the response.
+        This is a shortcut to the /pdb/query/v4/facts endpoint. It behaves the same as a call to /pdb/query/v4/facts with a query string of ["=", "certname", "<NODE>"].
+      operationId: node_facts_list
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/latest/api/query/v4/nodes.html#pdbqueryv4nodesnodefacts
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/facts_query'
+        - $ref: '#/components/parameters/node_certname'
+      responses:
+        default:
+          $ref: '#/components/responses/facts_response'
+  /pdb/query/v4/nodes/{node}/facts/{name}:
+    get:
+      description: >
+        This will return facts with the given name for the given node. Facts from deactivated and expired nodes aren’t included in the response.
+        This is a shortcut to the /pdb/query/v4/facts endpoint. It behaves the same as a call to /pdb/query/v4/facts with a query string of:
+          ["and",
+            ["=", "certname", "<NODE>"],
+            ["=", "name", "<NAME>"]]
+      operationId: node_facts
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/latest/api/query/v4/nodes.html#pdbqueryv4nodesnodefactsname
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/facts_query'
+        - $ref: '#/components/parameters/node_certname'
+        - $ref: '#/components/parameters/facts_name'
+      responses:
+        default:
+          $ref: '#/components/responses/facts_response'
+  /pdb/query/v4/nodes/{node}/facts/{name}/{value}:
+    get:
+      description: >
+        This will return facts with the given name and value for the given node. Facts from deactivated and expired nodes aren’t included in the response.
+        This is a shortcut to the /pdb/query/v4/facts endpoint. It behaves the same as a call to /pdb/query/v4/facts with a query string of:
+          ["and",
+          ["=", "certname", "<NODE>"],
+          ["=", "name", "<NAME>"],
+          ["=", "value", "<VALUE>"]]
+      operationId: node_facts_value
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/latest/api/query/v4/nodes.html#pdbqueryv4nodesnodefactsnamevalue
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/facts_query'
+        - $ref: '#/components/parameters/node_certname'
+        - $ref: '#/components/parameters/facts_name'
+        - name: value
+          in: path
+          required: true
+          schema:
+            type: string
+          description: >
+            value of the fact
+      responses:
+        default:
+          $ref: '#/components/responses/facts_response'
+  /pdb/query/v4/nodes/{node}/resources:
+    get:
+      description: >
+        This will return the resources for the given node. Resources from deactivated and expired nodes aren’t included in the response.
+        This is a shortcut to the /pdb/query/v4/resources route. It behaves the same as a call to /pdb/query/v4/resources with a query string of ["=", "certname", "<NODE>"].
+      operationId: node_resources_list
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/latest/api/query/v4/nodes.html#pdbqueryv4nodesnoderesources
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/resources_query'
+        - $ref: '#/components/parameters/node_certname'
+      responses:
+        default:
+          $ref: '#/components/responses/resources_response'
+  /pdb/query/v4/nodes/{node}/resources/{type}:
+    get:
+      description: >
+        This will return the resources of the indicated type for the given node. Resources from deactivated and expired nodes aren’t included in the response.
+        This is a shortcut to the /pdb/query/v4/resources/<TYPE> route. It behaves the same as a call to /pdb/query/v4/resources with a query string of:
+          ["and",
+            ["=", "certname", "<NODE>"],
+            ["=", "type", "<TYPE>"]]
+      operationId: node_resources
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/6.3/api/query/v4/nodes.html#pdbqueryv4nodesnoderesourcestype
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/resources_query'
+        - $ref: '#/components/parameters/node_certname'
+        - $ref: '#/components/parameters/resources_type'
+      responses:
+        default:
+          $ref: '#/components/responses/resources_response'
+  /pdb/query/v4/nodes/{node}/resources/{type}/{title}:
+    get:
+      description: >
+        This will return the resource of the indicated type and title for the given node. Resources from deactivated and expired nodes aren’t included in the response.
+        This is a shortcut to the /pdb/query/v4/resources/<TYPE>/<TITLE> route. It behaves the same as a call to /pdb/query/v4/resources with a query string of:
+          ["and",
+            ["=", "certname", "<NODE>"],
+            ["=", "type", "<TYPE>"],
+            ["=", "title", "<TITLE>"]]
+      operationId: node_resources_title
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/6.3/api/query/v4/nodes.html#pdbqueryv4nodesnoderesourcestypetitle
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/resources_query'
+        - $ref: '#/components/parameters/node_certname'
+        - $ref: '#/components/parameters/resources_type'
+        - $ref: '#/components/parameters/resources_title'
+      responses:
+        default:
+          $ref: '#/components/responses/resources_response'
+  /pdb/query/v4/environments:
+    get:
+      description: >
+        Environments are semi-isolated groups of nodes managed by Puppet. Nodes are assigned to environments by their own configuration, or by the Puppet master’s external node classifier.
+        When PuppetDB collects info about a node, it keeps track of the environment the node is assigned to. PuppetDB also keeps a list of environments it has seen. You can query this list by making an HTTP request to the /environments endpoint.
+        This will return all environments known to PuppetDB.
+      operationId: environment_list
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/latest/api/query/v4/environments.html#pdbqueryv4environments
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+      responses:
+        default:
+          $ref: '#/components/responses/environments_response'
+  /pdb/query/v4/environments/{environment}:
+    get:
+      description: >
+        This will return the name of the environment if it currently exists in PuppetDB.
+      operationId: environment
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/latest/api/query/v4/environments.html#pdbqueryv4environmentsenvironment
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/environments_name'
+      responses:
+        default:
+          $ref: '#/components/responses/environment_response'
+  /pdb/query/v4/environments/{environment}/events:
+    get:
+      description: >
+        These routes are identical to issuing a request to /pdb/query/v4/[events|facts|reports|resources], with a query parameter of ["=","environment","<ENVIRONMENT>"]. All query parameters and route suffixes from the original routes are supported. The result format is also the same. Additional query parameters are ANDed with the environment clause. See /pdb/query/v4/events, /pdb/query/v4/facts, /pdb/query/v4/reports, or /pdb/query/v4/resources for more information.
+      operationId: environment_events
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/latest/api/query/v4/environments.html#pdbqueryv4environmentsenvironmenteventsfactsreportsresources
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/environments_name'
+      responses:
+        default:
+          $ref: '#/components/responses/events_response'
+  /pdb/query/v4/environments/{environment}/facts:
+    get:
+      description: >
+        These routes are identical to issuing a request to /pdb/query/v4/[events|facts|reports|resources], with a query parameter of ["=","environment","<ENVIRONMENT>"]. All query parameters and route suffixes from the original routes are supported. The result format is also the same. Additional query parameters are ANDed with the environment clause. See /pdb/query/v4/events, /pdb/query/v4/facts, /pdb/query/v4/reports, or /pdb/query/v4/resources for more information.
+      operationId: environment_facts
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/latest/api/query/v4/environments.html#pdbqueryv4environmentsenvironmenteventsfactsreportsresources
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/environments_name'
+      responses:
+        default:
+          $ref: '#/components/responses/facts_response'
+  /pdb/query/v4/environments/{environment}/reports:
+    get:
+      description: >
+        These routes are identical to issuing a request to /pdb/query/v4/[events|facts|reports|resources], with a query parameter of ["=","environment","<ENVIRONMENT>"]. All query parameters and route suffixes from the original routes are supported. The result format is also the same. Additional query parameters are ANDed with the environment clause. See /pdb/query/v4/events, /pdb/query/v4/facts, /pdb/query/v4/reports, or /pdb/query/v4/resources for more information.
+      operationId: environment_reports
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/latest/api/query/v4/environments.html#pdbqueryv4environmentsenvironmenteventsfactsreportsresources
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/environments_name'
+      responses:
+        default:
+          $ref: '#/components/responses/reports_response'
+  /pdb/query/v4/environments/{environment}/resources:
+    get:
+      description: >
+        These routes are identical to issuing a request to /pdb/query/v4/[events|facts|reports|resources], with a query parameter of ["=","environment","<ENVIRONMENT>"]. All query parameters and route suffixes from the original routes are supported. The result format is also the same. Additional query parameters are ANDed with the environment clause. See /pdb/query/v4/events, /pdb/query/v4/facts, /pdb/query/v4/reports, or /pdb/query/v4/resources for more information.
+      operationId: environment_resources
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/latest/api/query/v4/environments.html#pdbqueryv4environmentsenvironmenteventsfactsreportsresources
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/environments_name'
+      responses:
+        default:
+          $ref: '#/components/responses/resources_response'
+  /pdb/query/v4/producers:
+    get:
+      description: >
+        Producers are the Puppet masters that send reports, catalogs, and factsets to PuppetDB.
+        When PuppetDB stores a report, catalog, or factset, it keeps track of the producer of the report/catalog/factset. PuppetDB also keeps a list of producers it has seen. You can query this list by making an HTTP request to the /producers endpoint.
+        This will return all producers known to PuppetDB.
+      operationId: producer_list
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producers
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+      responses:
+        default:
+          $ref: '#/components/responses/producers_response'
+  /pdb/query/v4/producers/{producer}:
+    get:
+      description: >
+        This will return the name of the producer if it currently exists in PuppetDB.
+      operationId: producer
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producersproducer
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/producers_name'
+      responses:
+        default:
+          $ref: '#/components/responses/producer_response'
+  /pdb/query/v4/producers/{producer}/catalogs:
+    get:
+      description: >
+        These routes are identical to issuing a request to /pdb/query/v4/[catalogs|factsets|reports], with a query parameter of ["=","producer","<PRODUCER>"]. All query parameters and route suffixes from the original routes are supported. The result format is also the same. Additional query parameters are ANDed with the producer clause. See /pdb/query/v4/catalogs, /pdb/query/v4/factsets, or /pdb/query/v4/reports for more information.
+      operationId: producer_catalogs
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producersproducercatalogsfactsetsreports
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/producers_name'
+      responses:
+        default:
+          $ref: '#/components/responses/catalogs_response'
+  /pdb/query/v4/producers/{producer}/factsets:
+    get:
+      description: >
+        These routes are identical to issuing a request to /pdb/query/v4/[catalogs|factsets|reports], with a query parameter of ["=","producer","<PRODUCER>"]. All query parameters and route suffixes from the original routes are supported. The result format is also the same. Additional query parameters are ANDed with the producer clause. See /pdb/query/v4/catalogs, /pdb/query/v4/factsets, or /pdb/query/v4/reports for more information.
+      operationId: producer_factsets
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producersproducercatalogsfactsetsreports
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/producers_name'
+      responses:
+        default:
+          $ref: '#/components/responses/factsets_response'
+  /pdb/query/v4/producers/{producer}/reports:
+    get:
+      description: >
+        These routes are identical to issuing a request to /pdb/query/v4/[catalogs|factsets|reports], with a query parameter of ["=","producer","<PRODUCER>"]. All query parameters and route suffixes from the original routes are supported. The result format is also the same. Additional query parameters are ANDed with the producer clause. See /pdb/query/v4/catalogs, /pdb/query/v4/factsets, or /pdb/query/v4/reports for more information.
+      operationId: producer_reports
+      externalDocs:
+        url: https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producersproducercatalogsfactsetsreports
+      parameters:
+        - $ref: '#/components/parameters/paging_order_by'
+        - $ref: '#/components/parameters/paging_limit'
+        - $ref: '#/components/parameters/paging_include_total'
+        - $ref: '#/components/parameters/paging_offset'
+        - $ref: '#/components/parameters/query'
+        - $ref: '#/components/parameters/producers_name'
+      responses:
+        default:
+          $ref: '#/components/responses/reports_response'
