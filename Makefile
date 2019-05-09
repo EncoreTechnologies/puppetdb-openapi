@@ -21,13 +21,13 @@ all: validate
 clean: .clean-npm
 
 .PHONY: validate
-validate: .validate
+validate: .install .validate
 
 .PHONY: build
-build: .build
+build: .install .build
 
 .PHONY: gh-pages
-gh-pages: .gh-pages
+gh-pages: .install .gh-pages
 
 # list all makefile targets
 .PHONY: list
@@ -39,6 +39,13 @@ list:
 	@echo "==================== clean node_modules/ web_modules/ ===================="
 	rm -rf $(ROOT_DIR)/node_modules
 	rm -rf $(ROOT_DIR)/web_modules
+
+.PHONY: .install
+.install:
+	@echo
+	@echo "==================== install ===================="
+	@echo
+	npm install
 
 .PHONY: .validate
 .validate:

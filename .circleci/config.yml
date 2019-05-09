@@ -9,7 +9,7 @@ jobs:
       - checkout
       - run:
           name: Run tests
-          command: npm run build
+          command: make
 
 workflows:
   version: 2
