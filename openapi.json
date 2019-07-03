@@ -10,6 +10,83 @@
   },
   "components": {
     "parameters": {
+      "certname_query": {
+        "name": "certname",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "certname of the node\n"
+      },
+      "certname_path": {
+        "name": "certname",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "certname of the node\n"
+      },
+      "distinct_resources": {
+        "name": "distinct_resources",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "boolean"
+        },
+        "description": "Boolean. (For example, distinct_resources=true.) (EXPERIMENTAL: it is possible that the behavior of this parameter may change in future releases.) If specified, the result set will only return the most recent event for a given resource on a given node.\n\nFor example: if the resource File[/tmp/foo] was failing on some node but has since been fixed and is now succeeding, then a “normal” event query might return both the success and failure events. A query with distinct_resources=true would only return the success event, because this is the most recent event for that resource.\n\nBecause a distinct_resources query can be expensive, it requires a limited window of time to examine. Use the distinct_start_time and distinct_end_time parameters to define this interval. Issuing a distinct_resources query without specifying both of these parameters will cause an error.\n"
+      },
+      "distinct_start_time": {
+        "name": "distinct_start_time",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "used with distinct_resources. The start of the window of time to examine, as an ISO-8601 compatible date/time string.\n"
+      },
+      "distinct_end_time": {
+        "name": "distinct_end_time",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "used with distinct_resources. The end of the window of time to examine, as an ISO-8601 compatible date/time string.\n"
+      },
+      "event_counts_count_by": {
+        "name": "count_by",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "A string specifying what type of object is counted when building up the counts of successes, failures, noops, and skips. Supported values are resource (default) and certname.\n"
+      },
+      "event_counts_counts_filter": {
+        "name": "counts_filter",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "A JSON array of query predicates in the usual prefix form. This query is applied to the final event counts output. Supported operators are =, >, <, >=, and <=. Supported fields are failures, successes, noops, and skips.\n"
+      },
+      "event_counts_summarize_by": {
+        "name": "summarize_by",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "resource",
+            "containing_class",
+            "certname"
+          ]
+        },
+        "description": "A string specifying which type of object you’d like to see counts for. Supported values are resource, containing_class, and certname.\n"
+      },
       "environments_name": {
         "name": "environment",
         "in": "path",
@@ -28,14 +105,14 @@
         },
         "description": "name of the fact\n"
       },
-      "facts_query": {
-        "name": "query",
-        "in": "query",
-        "required": false,
+      "facts_value": {
+        "name": "value",
+        "in": "path",
+        "required": true,
         "schema": {
           "type": "string"
         },
-        "description": "A JSON array of query predicates, in prefix notation ([\"<OPERATOR>\", \"<FIELD>\", \"<VALUE>\"]). See the sections below for the supported operators and fields. For general info about queries, see our guide to query structure. This route is an extension of the facts endpoint. It uses the same parameters, operators, fields, and response format. If you provide a query parameter, it will specify additional criteria, which will be used to return a subset of the information normally returned by this route.\n"
+        "description": "value of the fact\n"
       },
       "node_certname": {
         "name": "node",
@@ -46,6 +123,33 @@
         },
         "description": "certname of the node\n"
       },
+      "package_name": {
+        "name": "package_name",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "The name of the package. (e.g. emacs24)\n"
+      },
+      "package_provider": {
+        "name": "provider",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "The name of the provider which the package data came from; typically the name of the packaging system. (e.g. apt)\n"
+      },
+      "package_version": {
+        "name": "version",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string"
+        },
+        "description": "The version of the package, in the format used by the package provider. (e.g. 24.5+1-6ubuntu1)\n"
+      },
       "paging_order_by": {
         "in": "query",
         "name": "order_by",
@@ -53,7 +157,7 @@
         "schema": {
           "type": "string"
         },
-        "description": "This parameter can be used to ask PuppetDB to return results sorted by one or more fields, in ascending or descending order. The value must be a JSON array of maps. Each map represents a field to sort by, and the order in which the maps are specified in the array determines the sort order. Each map must contain the key field, whose value must be the name of a field that can be returned by the specified query. Each map may also optionally contain the key order, whose value may either be \"asc\" or \"desc\", depending on whether you wish the field to be sorted in ascending or descending order. The default value for this key, if not specified, is \"asc\". Note that the legal values for field vary depending on which endpoint you are querying. For lists of legal fields, please refer to the documentation for the specific query endpoints.\n"
+        "description": "This parameter can be used to ask PuppetDB to return results sorted by one or more fields, in ascending or\ndescending order. The value must be a JSON array of maps. Each map represents a field to sort by, and the\norder in which the maps are specified in the array determines the sort order.\nEach map must contain the key field, whose value must be the name of a field that can be returned by the\nspecified query.\nEach map may also optionally contain the key order, whose value may either be \"asc\" or \"desc\", depending on\nwhether you wish the field to be sorted in ascending or descending order. The default value for this key, if\nnot specified, is \"asc\".\nNote that the legal values for field vary depending on which endpoint you are querying. For lists of legal\nfields, please refer to the documentation for the specific query endpoints.\n"
       },
       "paging_limit": {
         "in": "query",
@@ -72,7 +176,7 @@
           "type": "boolean",
           "default": false
         },
-        "description": "This parameter lets you request a count of how many records would have been returned, had the query not been limited using the limit parameter. This is useful if you want your application to show how far the user has navigated (“page 3 of 15”). The value should be a Boolean, and defaults to false. If true, the HTTP response will contain a header  X-Records, whose value is an integer indicating the total number of results available. Note Setting this flag to true will introduce a minor performance hit on the query.\n"
+        "description": "This parameter lets you request a count of how many records would have been returned, had the query not been limited using the limit parameter. This is useful if you want your application to show how far the user has navigated (“page 3 of 15”). The value should be a Boolean, and defaults to false. If true, the HTTP response will contain a header X-Records, whose value is an integer indicating the total number of results available. Note Setting this flag to true will introduce a minor performance hit on the query.\n"
       },
       "paging_offset": {
         "in": "query",
@@ -100,6 +204,15 @@
           "type": "string"
         },
         "description": "A JSON array of query predicates, in prefix notation ([\"<OPERATOR>\", \"<FIELD>\", \"<VALUE>\"]). See the sections below for the supported operators and fields. For general info about queries, see our guide to query structure.\n"
+      },
+      "reports_hash": {
+        "name": "hash",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "report's unique hash value\n"
       },
       "resources_query": {
         "name": "query",
@@ -130,6 +243,16 @@
       }
     },
     "responses": {
+      "aggregate_event_counts_response": {
+        "description": "The response is an array of JSON maps containing the summarize_by parameter, aggregated event-count information, and a total field expressing the number of event-count results that were aggregated. [ { \"summarize_by\": \"containing_class\", \"successes\": 2, \"failures\": 0, \"noops\": 0, \"skips\": 1, \"total\": 3 } ]\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/array_of_hashes"
+            }
+          }
+        }
+      },
       "catalog_response": {
         "description": "The result will be a single map of the catalog structure described above, or a JSON error message if the catalog is not found.\n",
         "content": {
@@ -141,7 +264,7 @@
         }
       },
       "catalogs_response": {
-        "description": "Successful responses will be in application/json. The result will be a JSON array with one entry per certname. Each entry is of the form: {\n  \"certname\" : <node certname>,\n  \"version\" : <catalog version>,\n  \"environment\" : <catalog environment>,\n  \"hash\" : <sha1 sum of catalog resources>,\n  \"transaction_uuid\" : <string to identify puppet run>,\n  \"code_id\" : <string to identify puppet code>,\n  \"producer_timestamp\": <time of transmission by master>,\n  \"producer\": <master certname>\n  \"resources\" : <expanded resources>,\n  \"edges\" : <expanded edges>\n} The <expanded resources> object is of the following form: {\n  \"href\": <url>,\n  \"data\": [ {\n    \"certname\": <string>,\n    \"resource\": <string>,\n    \"type\": <string>,\n    \"title\": <sttring>,\n    \"exported\": <boolean>,\n    \"tags\": [<tags>, ...],\n    \"file\": <string>,\n    \"line\": <number>,\n    \"parameters\": <any>\n  } ... ]\n} In parameters map, any rich data values will appear as readable strings. The <expanded edges> object is of the follow form:         {\n  \"href\": <url>,\n  \"data\": [ {\n    \"relationship\": <string>,\n    \"source_title\": <string>,\n    \"source_type\": <string>,\n    \"target_title\": <string>,\n    \"target_type\": <string>\n  } ... ]\n}\n",
+        "description": "Successful responses will be in application/json.\nThe result will be a JSON array with one entry per certname. Each entry is of the form:\n{\n  \"certname\" : <node certname>,\n  \"version\" : <catalog version>,\n  \"environment\" : <catalog environment>,\n  \"hash\" : <sha1 sum of catalog resources>,\n  \"transaction_uuid\" : <string to identify puppet run>,\n  \"code_id\" : <string to identify puppet code>,\n  \"producer_timestamp\": <time of transmission by master>,\n  \"producer\": <master certname>\n  \"resources\" : <expanded resources>,\n  \"edges\" : <expanded edges>\n}\nThe <expanded resources> object is of the following form:\n{\n  \"href\": <url>,\n  \"data\": [ {\n    \"certname\": <string>,\n    \"resource\": <string>,\n    \"type\": <string>,\n    \"title\": <sttring>,\n    \"exported\": <boolean>,\n    \"tags\": [<tags>, ...],\n    \"file\": <string>,\n    \"line\": <number>,\n    \"parameters\": <any>\n  } ... ]\n}\nIn parameters map, any rich data values will appear as readable strings.\nThe <expanded edges> object is of the follow form:\n{\n  \"href\": <url>,\n  \"data\": [ {\n    \"relationship\": <string>,\n    \"source_title\": <string>,\n    \"source_type\": <string>,\n    \"target_title\": <string>,\n    \"target_type\": <string>\n  } ... ]\n}\n",
         "content": {
           "application/json": {
             "schema": {
@@ -150,8 +273,28 @@
           }
         }
       },
+      "edges_response": {
+        "description": "The response is a JSON array of hashes, where each hash has the form:\n  {\n  \"certname\": <string>,\n  \"relationship\": <string>,\n  \"source_title\": <string>,\n  \"source_type\": <string>,\n  \"target_title\": <string>,\n  \"target_type\": <string>\n  }\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/edge_array"
+            }
+          }
+        }
+      },
       "events_response": {
         "description": "An array of zero or more event objects\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/array_of_hashes"
+            }
+          }
+        }
+      },
+      "event_counts_response": {
+        "description": "The response is a JSON array of maps. Each map contains the counts of events that matched the input parameters. The events are counted based on their statuses: failures, successes, noops, skips.\nThe maps also contain additional data about which object the events occurred on. The subject_type is the value that was used to summarize by (and therefore should match the input value to summarize_by). The subject map contains specific data about the object the event occurred on, and will vary based on the value specified for summarize_by.\n",
         "content": {
           "application/json": {
             "schema": {
@@ -181,7 +324,7 @@
         }
       },
       "facts_response": {
-        "description": "Successful responses will be in application/json. Errors will be returned as non-JSON strings. The result will be a JSON array, with one entry per fact. Each entry is of the form:\n    {\n    \"certname\": <node name>,\n    \"name\": <fact name>,\n    \"value\": <fact value>,\n    \"environment\": <facts environment>\n    }\n    The array is unsorted. Fact values can be strings, floats, integers, Booleans, arrays, or maps. Map and array values can be any of the same types.\n    If no facts match the query, an empty JSON array will be returned. Querying against value will return matches only at the top level. Hashes and arrays cannot be matched.\n",
+        "description": "Successful responses will be in application/json. Errors will be returned as non-JSON strings.\nThe result will be a JSON array, with one entry per fact. Each entry is of the form:\n    {\n    \"certname\": <node name>,\n    \"name\": <fact name>,\n    \"value\": <fact value>,\n    \"environment\": <facts environment>\n    }\n    The array is unsorted. Fact values can be strings, floats, integers, Booleans, arrays, or maps. Map and array values can be any of the same types.\n    If no facts match the query, an empty JSON array will be returned. Querying against value will return matches only at the top level. Hashes and arrays cannot be matched.\n",
         "content": {
           "application/json": {
             "schema": {
@@ -201,7 +344,67 @@
         }
       },
       "factsets_response": {
-        "description": "Successful responses will be in application/json. Errors will be returned as a non-JSON string.         The result will be a JSON array with one entry per certname. Each entry will be in the form:   {\n  \"certname\": <node name>,\n  \"environment\": <node environment>,\n  \"timestamp\": <time of last fact submission>,\n  \"producer_timestamp\": <time of command submission from master>,\n  \"producer\": <master certname>\n  \"facts\": <expanded facts>,\n  \"hash\": <sha1 sum of \"facts\" value>\n} The <expanded facts> object is an expansion of the following form:      {\n  \"href\": <url>,\n  \"data\": [ {\n    \"name\": <string>,\n    \"value\": <any>\n  } ... ]\n}\n",
+        "description": "Successful responses will be in application/json. Errors will be returned as a non-JSON string.\nThe result will be a JSON array with one entry per certname. Each entry will be in the form:\n{\n  \"certname\": <node name>,\n  \"environment\": <node environment>,\n  \"timestamp\": <time of last fact submission>,\n  \"producer_timestamp\": <time of command submission from master>,\n  \"producer\": <master certname>\n  \"facts\": <expanded facts>,\n  \"hash\": <sha1 sum of \"facts\" value>\n}\nThe <expanded facts> object is an expansion of the following form:\n{\n  \"href\": <url>,\n  \"data\": [ {\n    \"name\": <string>,\n    \"value\": <any>\n  } ... ]\n}\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/array_of_hashes"
+            }
+          }
+        }
+      },
+      "fact_contents_response": {
+        "description": "The result will be a JSON array with one entry per certname. Each entry is of the form:\n  {\n  \"certname\": <node name>,\n  \"environment\": <node environment>,\n  \"name\": <fact name>,\n  \"path\": <path to tree node>,\n  \"facts\": <value of tree node>\n  }\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/fact_content_array"
+            }
+          }
+        }
+      },
+      "fact_names_response": {
+        "description": "The response will be in application/json, and will contain an alphabetical JSON array containing fact names. Each fact name will appear only one time, regardless of how many nodes have that fact. [<fact>, <fact>, ..., <fact>, <fact>]\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/array_of_strings"
+            }
+          }
+        }
+      },
+      "fact_paths_response": {
+        "description": "Successful responses will be in application/json. Errors will be returned as a non-JSON string. The result will be a JSON array with one entry per certname. Each entry is of the form:\n  {\n  \"path\": <fact-node path>\n  \"type\": <fact-node type>\n  }\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/fact_path_array"
+            }
+          }
+        }
+      },
+      "inventory_response": {
+        "description": "The result will be a JSON array with one entry per certname. Each entry is of the form:\n  {\n  \"certname\": <node certname>,\n  \"timestamp\": <timestamp of fact reception>,\n  \"environment\": <node environment>,\n  \"facts\": {\n    <fact name>: <fact value>,\n    ...\n  },\n  \"trusted\": {\n    <data name>: <data value>,\n    ...\n    }\n  }\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/inventory_array"
+            }
+          }
+        }
+      },
+      "logs_response": {
+        "description": "The result will be a JSON array with one entry per log\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/log_array"
+            }
+          }
+        }
+      },
+      "metrics_response": {
+        "description": "An array of JSON objects are returned. The results are in the order they were provided in the POSTed array. The JSON objects are the same as if they were individually retrieved via the mbean/<name> endpoint.\n",
         "content": {
           "application/json": {
             "schema": {
@@ -222,6 +425,16 @@
       },
       "nodes_response": {
         "description": "The response is a JSON array of hashes. The array is unsorted. If no nodes match the query, an empty JSON array will be returned.\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/array_of_hashes"
+            }
+          }
+        }
+      },
+      "packages_response": {
+        "description": "The response is a JSON array of hashes, where each hash has the form:\n  {\"package_name\": <string>,\n  \"version\": <string>,\n  \"provider\": <string>}\n  \n  The array is unsorted by default.\n",
         "content": {
           "application/json": {
             "schema": {
@@ -261,11 +474,11 @@
         }
       },
       "resources_response": {
-        "description": "An array of zero or more resource objects\n",
+        "description": "An array of zero or more resource objects, with each object having the following form:\n  {\n  \"certname\": \"the certname of the associated host\",\n  \"resource\": \"the resource's unique hash\",\n  \"type\": \"File\",\n  \"title\": \"/etc/hosts\",\n  \"exported\": \"true\",\n  \"tags\": [\"foo\", \"bar\"],\n  \"file\": \"/etc/puppetlabs/code/environments/production/manifests/site.pp\",\n  \"line\": \"1\",\n  \"environment\": \"production\",\n  \"parameters\": {\n     <parameter>: <value>,\n     <parameter>: <value>,\n  ...}\n  }\n",
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/array_of_hashes"
+              "$ref": "#/components/schemas/resource_array"
             }
           }
         }
@@ -278,8 +491,205 @@
           "type": "object"
         }
       },
+      "array_of_strings": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
       "hash": {
         "type": "object"
+      },
+      "edge": {
+        "type": "object",
+        "properties": {
+          "certname": {
+            "type": "string"
+          },
+          "relationship": {
+            "type": "string"
+          },
+          "source_title": {
+            "type": "string"
+          },
+          "source_type": {
+            "type": "string"
+          },
+          "target_title": {
+            "type": "string"
+          },
+          "target_type": {
+            "type": "string"
+          }
+        }
+      },
+      "edge_array": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/edge"
+        }
+      },
+      "fact_content": {
+        "type": "object",
+        "properties": {
+          "certname": {
+            "type": "string",
+            "description": "node name"
+          },
+          "environment": {
+            "type": "string",
+            "description": "node environment"
+          },
+          "name": {
+            "type": "string",
+            "description": "fact name"
+          },
+          "path": {
+            "type": "string",
+            "description": "path to tree node"
+          },
+          "facts": {
+            "type": "string",
+            "description": "value of tree node"
+          }
+        }
+      },
+      "fact_content_array": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/fact_content"
+        }
+      },
+      "fact_path": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "fact-node path"
+          },
+          "type": {
+            "type": "string",
+            "description": "fact-node type"
+          }
+        }
+      },
+      "fact_path_array": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/fact_path"
+        }
+      },
+      "log": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "time": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "log_array": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/log"
+        }
+      },
+      "inventory": {
+        "type": "object",
+        "properties": {
+          "certname": {
+            "type": "string",
+            "description": "node certname"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "timestamp of fact reception"
+          },
+          "environment": {
+            "type": "string",
+            "description": "node environment"
+          },
+          "facts": {
+            "type": "object",
+            "description": "keys = fact names, values = fact values"
+          },
+          "trusted": {
+            "type": "object",
+            "description": "keys = data name, values = data values"
+          }
+        }
+      },
+      "inventory_array": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/inventory"
+        }
+      },
+      "resource": {
+        "type": "object",
+        "properties": {
+          "certname": {
+            "type": "string",
+            "description": "the certname of the associated host"
+          },
+          "resource": {
+            "type": "string",
+            "description": "the resource's unique hash"
+          },
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "exported": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "string"
+          },
+          "environment": {
+            "type": "string"
+          },
+          "parameters": {
+            "type": "object"
+          }
+        }
+      },
+      "resource_array": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/resource"
+        }
       }
     }
   },
@@ -424,7 +834,7 @@
             "$ref": "#/components/parameters/paging_offset"
           },
           {
-            "$ref": "#/components/parameters/facts_query"
+            "$ref": "#/components/parameters/query"
           },
           {
             "$ref": "#/components/parameters/node_certname"
@@ -458,7 +868,7 @@
             "$ref": "#/components/parameters/paging_offset"
           },
           {
-            "$ref": "#/components/parameters/facts_query"
+            "$ref": "#/components/parameters/query"
           },
           {
             "$ref": "#/components/parameters/node_certname"
@@ -495,7 +905,7 @@
             "$ref": "#/components/parameters/paging_offset"
           },
           {
-            "$ref": "#/components/parameters/facts_query"
+            "$ref": "#/components/parameters/query"
           },
           {
             "$ref": "#/components/parameters/node_certname"
@@ -559,7 +969,7 @@
         "description": "This will return the resources of the indicated type for the given node. Resources from deactivated and expired nodes aren’t included in the response. This is a shortcut to the /pdb/query/v4/resources/<TYPE> route. It behaves the same as a call to /pdb/query/v4/resources with a query string of:\n  [\"and\",\n    [\"=\", \"certname\", \"<NODE>\"],\n    [\"=\", \"type\", \"<TYPE>\"]]\n",
         "operationId": "node_resources",
         "externalDocs": {
-          "url": "https://puppet.com/docs/puppetdb/6.3/api/query/v4/nodes.html#pdbqueryv4nodesnoderesourcestype"
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/nodes.html#pdbqueryv4nodesnoderesourcestype"
         },
         "parameters": [
           {
@@ -596,7 +1006,7 @@
         "description": "This will return the resource of the indicated type and title for the given node. Resources from deactivated and expired nodes aren’t included in the response. This is a shortcut to the /pdb/query/v4/resources/<TYPE>/<TITLE> route. It behaves the same as a call to /pdb/query/v4/resources with a query string of:\n  [\"and\",\n    [\"=\", \"certname\", \"<NODE>\"],\n    [\"=\", \"type\", \"<TYPE>\"],\n    [\"=\", \"title\", \"<TITLE>\"]]\n",
         "operationId": "node_resources_title",
         "externalDocs": {
-          "url": "https://puppet.com/docs/puppetdb/6.3/api/query/v4/nodes.html#pdbqueryv4nodesnoderesourcestypetitle"
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/nodes.html#pdbqueryv4nodesnoderesourcestypetitle"
         },
         "parameters": [
           {
@@ -837,7 +1247,7 @@
         "description": "Producers are the Puppet masters that send reports, catalogs, and factsets to PuppetDB. When PuppetDB stores a report, catalog, or factset, it keeps track of the producer of the report/catalog/factset. PuppetDB also keeps a list of producers it has seen. You can query this list by making an HTTP request to the /producers endpoint. This will return all producers known to PuppetDB.\n",
         "operationId": "producer_list",
         "externalDocs": {
-          "url": "https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producers"
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/producers.html#pdbqueryv4producers"
         },
         "parameters": [
           {
@@ -868,7 +1278,7 @@
         "description": "This will return the name of the producer if it currently exists in PuppetDB.\n",
         "operationId": "producer",
         "externalDocs": {
-          "url": "https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producersproducer"
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/producers.html#pdbqueryv4producersproducer"
         },
         "parameters": [
           {
@@ -902,7 +1312,7 @@
         "description": "These routes are identical to issuing a request to /pdb/query/v4/[catalogs|factsets|reports], with a query parameter of [\"=\",\"producer\",\"<PRODUCER>\"]. All query parameters and route suffixes from the original routes are supported. The result format is also the same. Additional query parameters are ANDed with the producer clause. See /pdb/query/v4/catalogs, /pdb/query/v4/factsets, or /pdb/query/v4/reports for more information.\n",
         "operationId": "producer_catalogs",
         "externalDocs": {
-          "url": "https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producersproducercatalogsfactsetsreports"
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/producers.html#pdbqueryv4producersproducercatalogsfactsetsreports"
         },
         "parameters": [
           {
@@ -936,7 +1346,7 @@
         "description": "These routes are identical to issuing a request to /pdb/query/v4/[catalogs|factsets|reports], with a query parameter of [\"=\",\"producer\",\"<PRODUCER>\"]. All query parameters and route suffixes from the original routes are supported. The result format is also the same. Additional query parameters are ANDed with the producer clause. See /pdb/query/v4/catalogs, /pdb/query/v4/factsets, or /pdb/query/v4/reports for more information.\n",
         "operationId": "producer_factsets",
         "externalDocs": {
-          "url": "https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producersproducercatalogsfactsetsreports"
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/producers.html#pdbqueryv4producersproducercatalogsfactsetsreports"
         },
         "parameters": [
           {
@@ -970,7 +1380,7 @@
         "description": "These routes are identical to issuing a request to /pdb/query/v4/[catalogs|factsets|reports], with a query parameter of [\"=\",\"producer\",\"<PRODUCER>\"]. All query parameters and route suffixes from the original routes are supported. The result format is also the same. Additional query parameters are ANDed with the producer clause. See /pdb/query/v4/catalogs, /pdb/query/v4/factsets, or /pdb/query/v4/reports for more information.\n",
         "operationId": "producer_reports",
         "externalDocs": {
-          "url": "https://puppet.com/docs/puppetdb/6.3/api/query/v4/producers.html#pdbqueryv4producersproducercatalogsfactsetsreports"
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/producers.html#pdbqueryv4producersproducercatalogsfactsetsreports"
         },
         "parameters": [
           {
@@ -995,6 +1405,943 @@
         "responses": {
           "default": {
             "$ref": "#/components/responses/reports_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/factsets": {
+      "get": {
+        "description": "This will return all factsets matching the given query.\n",
+        "operationId": "factset_list",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/factsets.html#pdbqueryv4factsets"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/factsets_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/factsets/{node}": {
+      "get": {
+        "description": "This will return the most recent factset for the given node. Supplying a node this way will restrict any given query to only apply to that node, but in practice this endpoint is typically used without a query string or URL parameters. The result will be a single map of the factset structure described above, or a JSON error message if the factset is not found.\n",
+        "operationId": "factset_node",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/factsets.html#pdbqueryv4factsetsnode"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/node_certname"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/factset_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/factsets/{node}/facts": {
+      "get": {
+        "description": "This will return all facts for a particular factset, designated by a node certname. This is a shortcut to the /facts endpoint. It behaves the same as a call to /facts with a query string of [\"=\", \"certname\", \"<NODE>\"], except results are returned even if the node is deactivated or expired.\n",
+        "operationId": "factset_node_facts",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/factsets.html#pdbqueryv4factsetsnodefacts"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          },
+          {
+            "$ref": "#/components/parameters/node_certname"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/facts_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/facts": {
+      "get": {
+        "description": "This will return all facts matching the given query. Facts for deactivated nodes are not included in the response.\n",
+        "operationId": "fact_list",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/facts.html#pdbqueryv4facts"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/facts_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/facts/{name}": {
+      "get": {
+        "description": "This will return all facts with the given fact name, for all nodes. It behaves exactly like a call to /pdb/query/v4/facts with a query string of [\"=\", \"name\", \"<FACT NAME>\"].\n",
+        "operationId": "fact_name",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/facts.html#pdbqueryv4factsfact-name"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          },
+          {
+            "$ref": "#/components/parameters/facts_name"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/facts_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/facts/{name}/{value}": {
+      "get": {
+        "description": "This will return all facts with the given fact name and value, for all nodes. (That is, only the certname field will differ in each result.) It behaves exactly like a call to /pdb/query/v4/facts with a query string of:\n  [\"and\",\n    [\"=\", \"name\", \"<FACT NAME>\"],\n    [\"=\", \"value\", \"<VALUE>\"]]\n",
+        "operationId": "fact_name_value",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/facts.html#pdbqueryv4factsfact-namevalue"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          },
+          {
+            "$ref": "#/components/parameters/facts_name"
+          },
+          {
+            "$ref": "#/components/parameters/facts_value"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/facts_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/fact-names": {
+      "get": {
+        "description": "This will return an alphabetical list of all known fact names, including those which are known only for deactivated nodes.\n",
+        "operationId": "fact_names_list",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/fact-names.html"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/fact_names_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/fact-paths": {
+      "get": {
+        "description": "The /fact-paths endpoint retrieves the set of all known fact paths for all known nodes, and is intended as a counterpart to the fact-names endpoint, providing increased granularity around structured facts. The endpoint may be useful for building autocompletion in GUIs or for other applications that require a basic top-level view of fact paths. This will return all fact paths matching the given query.\n",
+        "operationId": "fact_paths_list",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/fact-paths.html"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/fact_paths_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/fact-contents": {
+      "get": {
+        "description": "You can query fact information with greater power by using the /fact-contents endpoint. This endpoint provides the capability to descend into structured facts and query tree nodes deep within this data by using the concept of paths and values.\n\nPaths and Values\n\nStructured facts can be thought of as trees. For example,\n\n\"mountpoints\": {\n  \"/\": {\n    \"available\": \"6.35 GiB\",\n    \"available_bytes\": 6820597760,\n    \"capacity\": \"74.05%\",\n    \"device\": \"/dev/sda2\",\n    \"filesystem\": \"ext4\",\n    \"options\": [ \"rw\", \"relatime\", \"data=ordered\" ],\n    \"size\": \"24.48 GiB\",\n    \"size_bytes\": 26288123904,\n    \"used\": \"18.13 GiB\",\n    \"used_bytes\": 19467526144\n  },\n  \"/boot\": {\n    \"available\": \"472.39 MiB\",\n    \"available_bytes\": 495337472,\n    \"capacity\": \"7.55%\",\n    \"device\": \"/dev/sda1\",\n    \"filesystem\": \"vfat\",\n    \"options\": [ \"rw\", \"relatime\", \"fmask=0022\", \"dmask=0022\",\n    \"codepage=437\", \"iocharset=iso8859-1\", \"shortname=mixed\",\n    \"errors=remount-ro\" ],\n    \"size\": \"510.98 MiB\",\n    \"size_bytes\": 535805952,\n    \"used\": \"38.59 MiB\",\n    \"used_bytes\": 40468480\n  }\n}\n\nA fact path is an array representing a route from the root of the tree to one of the leaf values, with successive keys representing descent through hashes, and integers representing descent through arrays (the integer being the index, starting at 0). Structured fact leaf values may be hashes, arrays, integers, floats, strings, or booleans.\n\nIn the context of the fact above, the first mount option for the device mounted at “/” is specified by\n\n[\"mountpoints\", \"/\", \"options\", 0]\n\nThe size of the device mounted at “/boot” is specified by\n\n[\"mountpoints\", \"/boot\", \"size\"]\n\nBy combining path and value queries on the fact-contents endpoint using an and clause, you can filter results based on the leaf values of structured facts.\n\nThis will return all fact contents that match the given query.\n",
+        "operationId": "fact_contents_list",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/fact-contents.html"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/fact_contents_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/inventory": {
+      "get": {
+        "description": "The /inventory endpoint enables an alternative query syntax for digging into structured facts, and can be used instead of the facts, fact-contents, and factsets endpoints for most fact-related queries. This will return an array of node inventories matching the given query. Inventories for deactivated nodes are not included in the response.\n",
+        "operationId": "inventory",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/inventory.html"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/inventory_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/catalogs": {
+      "get": {
+        "description": "This will return a JSON array containing the most recent catalog for each node in your infrastructure.\n",
+        "operationId": "catalog_list",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/catalogs.html"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/catalogs_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/catalogs/{node}": {
+      "get": {
+        "description": "This will return the most recent catalog for the given node. Supplying a node this way will restrict any given query to only apply to that node, but in practice this endpoint is typically used without a query string or URL parameters. The result will be a single map of the catalog structure described above, or a JSON error message if the catalog is not found.\n",
+        "operationId": "catalog_node",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/catalogs.html#pdbqueryv4catalogsnode"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          },
+          {
+            "$ref": "#/components/parameters/node_certname"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/catalog_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/catalogs/{node}/edges": {
+      "get": {
+        "description": "This will return all edges for a particular catalog, designated by a node certname. This is a shortcut to the /edges endpoint. It behaves the same as a call to /edges with a query string of [\"=\", \"certname\", \"<NODE>\"], except results are returned even if the node is deactivated or expired.\n",
+        "operationId": "catalog_node_edges",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/catalogs.html#pdbqueryv4catalogsnodeedges"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          },
+          {
+            "$ref": "#/components/parameters/node_certname"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/edges_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/catalogs/{node}/resources": {
+      "get": {
+        "description": "This will return all resources for a particular catalog, designated by a node certname. This is a shortcut to the /resources endpoint. It behaves the same as a call to /resources with a query string of [\"=\", \"certname\", \"<NODE>\"], except results are returned even if the node is deactivated or expired.\n",
+        "operationId": "catalog_node_resources",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/catalogs.html#pdbqueryv4catalogsnoderesources"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          },
+          {
+            "$ref": "#/components/parameters/node_certname"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/resources_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/resources": {
+      "get": {
+        "description": "This will return all resources matching the given query. Resources for deactivated nodes are not included in the response.\n",
+        "operationId": "resource_list",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/resources.html"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/resources_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/resources/{type}": {
+      "get": {
+        "description": "This will return all resources matching the given query. Resources for deactivated nodes are not included in the response.\n",
+        "operationId": "resource_type",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/resources.html#pdbqueryv4resourcestype"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          },
+          {
+            "$ref": "#/components/parameters/resources_type"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/resources_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/resources/{type}/{title}": {
+      "get": {
+        "description": "This will return all resources for all nodes with the given type and title. Resources from deactivated nodes aren’t included in the response.\nThis behaves exactly like a call to /pdb/query/v4/resources with a query string of:\n  [\"and\",\n    [\"=\", \"type\", \"<TYPE>\"],\n    [\"=\", \"title\", \"<TITLE>\"]]\n",
+        "operationId": "resource_type_title",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/resources.html#pdbqueryv4resourcestype"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          },
+          {
+            "$ref": "#/components/parameters/resources_type"
+          },
+          {
+            "$ref": "#/components/parameters/resources_title"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/resources_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/edges": {
+      "get": {
+        "description": "Catalog edges are relationships formed between two resources. They represent the edges inside the catalog graph, whereas resources represent the nodes in the graph. You can query edges by making an HTTP request to the /edges endpoint.\nReturns all edges known to PuppetDB.\n",
+        "operationId": "edge_list",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/resources.html#pdbqueryv4resourcestype"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/edges_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/reports": {
+      "get": {
+        "description": "Puppet agent nodes submit reports after their runs, and the Puppet master forwards these to PuppetDB. Each report includes:\n  * Data about the entire run\n  * Metadata about the report\n  * Many events, describing what happened during the run\n\nAfter this information is stored in PuppetDB, it can be queried in various ways.\n  * You can query data about the run and report metadata by making an HTTP request to the /reports endpoint.\n  * You can query data about individual events by making an HTTP request to the /events endpoint.\n  * You can query summaries of event data by making an HTTP request to the /event-counts or aggregate-event-counts endpoints.\n",
+        "operationId": "report_list",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/reports.html"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/reports_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/reports/{hash}/events": {
+      "get": {
+        "description": "Returns all events for a particular report, designated by its unique hash.\nThis is a shortcut to the /events endpoint. It behaves the same as a call to /events with a query string of [\"=\", \"report\", \"<HASH>\"].\n",
+        "operationId": "report_events",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/reports.html#pdbqueryv4reportshashevents"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          },
+          {
+            "$ref": "#/components/parameters/reports_hash"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/events_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/reports/{hash}/metrics": {
+      "get": {
+        "description": "Returns all metrics for a particular report, designated by its unique hash. This endpoint does not currently support querying or paging.\n",
+        "operationId": "report_metrics",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/reports.html#pdbqueryv4reportshashmetrics"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/reports_hash"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/metrics_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/reports/{hash}/logs": {
+      "get": {
+        "description": "Returns all logs for a particular report, designated by its unique hash.\n",
+        "operationId": "report_logs",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/reports.html#pdbqueryv4reportshashlogs"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/query"
+          },
+          {
+            "$ref": "#/components/parameters/reports_hash"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/logs_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/events": {
+      "get": {
+        "description": "Returns all resource events matching the given query. (Resource events are generated from Puppet reports.)\n",
+        "operationId": "event_list",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/events.html"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          },
+          {
+            "$ref": "#/components/parameters/distinct_resources"
+          },
+          {
+            "$ref": "#/components/parameters/distinct_start_time"
+          },
+          {
+            "$ref": "#/components/parameters/distinct_end_time"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/events_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/event-counts": {
+      "get": {
+        "description": "Returns count information about all of the resource events matching the given query. For a given object type (resource, containing_class, or node), you can retrieve counts of the number of events on objects of that type that had a status of success, failure, noop, or skip.\n\nSee the events endpoint for additional documentation, as this endpoint builds heavily on it.\n",
+        "operationId": "event_count_list",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/event-counts.html"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          },
+          {
+            "$ref": "#/components/parameters/event_counts_summarize_by"
+          },
+          {
+            "$ref": "#/components/parameters/event_counts_count_by"
+          },
+          {
+            "$ref": "#/components/parameters/event_counts_counts_filter"
+          },
+          {
+            "$ref": "#/components/parameters/distinct_resources"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/event_counts_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/aggregate-event-counts": {
+      "get": {
+        "description": "Returns aggregated count information about all of the resource events matching the given query.\nThis endpoint is built entirely on the event-counts endpoint and will aggregate those results into a single map.\n",
+        "operationId": "aggregate_event_count_list",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/aggregate-event-counts.html"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/query"
+          },
+          {
+            "$ref": "#/components/parameters/event_counts_summarize_by"
+          },
+          {
+            "$ref": "#/components/parameters/event_counts_count_by"
+          },
+          {
+            "$ref": "#/components/parameters/event_counts_counts_filter"
+          },
+          {
+            "$ref": "#/components/parameters/distinct_resources"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/aggregate_event_counts_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/packages": {
+      "get": {
+        "description": "Returns all installed packages, across all nodes. One record is returned for each (package_name, version, provider) combination that exists in your infrastructure.\n",
+        "operationId": "package_list",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/packages.html"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/package_name"
+          },
+          {
+            "$ref": "#/components/parameters/package_version"
+          },
+          {
+            "$ref": "#/components/parameters/package_provider"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/packages_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/package-inventory": {
+      "get": {
+        "description": "Returns all installed packages along with the certname of the nodes they are installed on.\n",
+        "operationId": "package_inventory_list",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/packages.html#pdbqueryv4package-inventory"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/certname_query"
+          },
+          {
+            "$ref": "#/components/parameters/package_name"
+          },
+          {
+            "$ref": "#/components/parameters/package_version"
+          },
+          {
+            "$ref": "#/components/parameters/package_provider"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/packages_response"
+          }
+        }
+      }
+    },
+    "/pdb/query/v4/package-inventory/{certname}": {
+      "get": {
+        "description": "This will return all packages installed on the provided certname. It behaves exactly like a call to /pdb/query/v4/packages with a query string of [\"=\", \"certname\", <CERTNAME>].\n",
+        "operationId": "package_inventory_certname",
+        "externalDocs": {
+          "url": "https://puppet.com/docs/puppetdb/latest/api/query/v4/packages.html#pdbqueryv4package-inventorycertname"
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/paging_order_by"
+          },
+          {
+            "$ref": "#/components/parameters/paging_limit"
+          },
+          {
+            "$ref": "#/components/parameters/paging_include_total"
+          },
+          {
+            "$ref": "#/components/parameters/paging_offset"
+          },
+          {
+            "$ref": "#/components/parameters/certname_path"
+          },
+          {
+            "$ref": "#/components/parameters/package_name"
+          },
+          {
+            "$ref": "#/components/parameters/package_version"
+          },
+          {
+            "$ref": "#/components/parameters/package_provider"
+          }
+        ],
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/packages_response"
           }
         }
       }
